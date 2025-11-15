@@ -1,7 +1,7 @@
 ---
 # tasks file for webserver
 
-- name: Install Apache and PHP
+- name: Install Apache, PHP and dependencies
   ansible.builtin.apt:
     name:
       - apache2
@@ -18,11 +18,7 @@
       - php-mbstring
       - php-xml
       - php-zip
-    state: present
-
-- name: Download unzip
-  ansible.builtin.apt:
-    name: unzip
+      - unzip
     state: present
     update_cache: yes
 
@@ -45,28 +41,6 @@
     owner: "{{ web_user }}"
     group: "{{ web_group }}"
     recurse: yes
-
-- name: Set WordPress directories permissions
-  ansible.builtin.find:
-    paths: /var/www/html/wordpress
-    file_type: directory
-  register: wordpress_dirs
-
-- ansible.builtin.file:
-    path: "{{ item.path }}"
-    mode: "0755"
-  loop: "{{ wordpress_dirs.files }}"
-
-- name: Set WordPress files permissions
-  ansible.builtin.find:
-    paths: /var/www/html/wordpress
-    file_type: file
-  register: wordpress_files
-
-- ansible.builtin.file:
-    path: "{{ item.path }}"
-    mode: "0644"
-  loop: "{{ wordpress_files.files }}"
 
 - name: Configure wp-config.php
   ansible.builtin.template:
