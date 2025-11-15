@@ -1,0 +1,6 @@
+*/aws/credentials
+*.pem
+*.tfstate
+*.tfstate.backup
+*/.terraform/*
+*.terraform.lock.hcl

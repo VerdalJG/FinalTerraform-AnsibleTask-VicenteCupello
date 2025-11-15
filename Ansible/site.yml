@@ -1,0 +1,34 @@
+---
+- name: Configure database servers
+  hosts: role_db
+  roles:
+    - database
+
+- name: Configure web servers
+  hosts: role_webserver
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    db_host: "{{ hostvars[groups['role_db'][0]].private_ip_address }}"
+    web_user: www-data
+    web_group: www-data
+  roles:
+    - webserver
+
+- name: Verify WordPress is up
+  hosts: role_webserver
+  gather_facts: false
+  tasks:
+    - name: Check that the WordPress site returns HTTP 200
+      uri:
+        url: http://{{ ansible_host }}/wordpress/
+        method: GET
+        return_content: no
+        status_code: 200
+      register: result
+      retries: 3         # retry in case the service is still starting
+      delay: 10          # wait 10 seconds between retries
+      until: result.status == 200
+
+    - name: Print validation result
+      debug:
+        msg: "WordPress is up and returned HTTP 200" 

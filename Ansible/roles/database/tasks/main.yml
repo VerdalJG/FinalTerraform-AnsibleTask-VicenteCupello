@@ -1,0 +1,42 @@
+---
+# tasks file for database
+
+- name: Install MariaDB
+  ansible.builtin.apt:
+    name: mysql-server
+    state: present
+
+- name: Ensure MariaDB is running
+  ansible.builtin.service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Install PyMySQL so Ansible can talk to MySQL
+  ansible.builtin.apt:
+    name: python3-pymysql
+    state: present
+    update_cache: yes
+
+- name: Allow MySQL to listen on all interfaces
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+  notify: Restart MySQL
+
+- name: Create WordPress database
+  mysql_db:
+    name: wordpress
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Create WordPress user
+  mysql_user:
+    name: wp_user
+    password: wp_pass
+    priv: 'wordpress.*:ALL'
+    host: '%'
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
