@@ -1,60 +1,111 @@
-Terraform + Ansible WordPress deployment
+# Terraform + Ansible WordPress Deployment
 
-1. Prerequisites
-Before running this project, make sure you have the following installed:
+This project demonstrates a **two-step workflow** for deploying WordPress on AWS using Terraform and Ansible.
 
-Terraform ≥ 1.5.0
-Ansible ≥ 7.0
-AWS CLI (optional, for testing and credentials verification)
-Python ≥ 3.8 (for Ansible)
-SSH access to your target machines
+- **Terraform** provisions the infrastructure (VPC, subnets, EC2 instances, networking).  
+- **Ansible** configures the infrastructure (installs WordPress, sets permissions, validates deployment).  
+
+---
+
+## 1. Prerequisites
+
+Before running this project, ensure you have the following installed:
+
+- **Terraform** ≥ 1.5.0  
+- **Ansible** ≥ 7.0  
+- **AWS CLI** (optional, for testing credentials)  
+- **Python** ≥ 3.8 (required for Ansible)  
+- **SSH access** to your target machines  
 
 Also, ensure you have:
-AWS credentials file (aws/credentials) with proper permissions
-SSH private key (key-name.pem) for connecting to EC2 instances
 
-2. Execution Steps
+- AWS credentials file (`aws/credentials`) with proper permissions  
+- SSH private key (`key-name.pem`) for connecting to EC2 instances  
 
-You must create a key pair in the AWS Management console webpage and download the .pem that is generated.
+---
 
-You must navigate to ansible.cfg to configure where it should find the SSH private key as such:
-private_key_file = /route/key-name.pem
+## 2. Setup Instructions
 
-You must also configure where your credentials file is for AWS to pick it up to use with Terraform and Ansible
+### 2.1 AWS Key Pair
+1. Create a key pair in the **AWS Management Console**.  
+2. Download the `.pem` file (private key) for SSH access.  
 
-I recommend using an environment variable for it as such (run this before running the Makefile):
-export AWS_SHARED_CREDENTIALS_FILE=/route/aws/credentials
+---
 
-You should change the names of the resources in the Terraform folder (in resources.tf)
-Keep in mind you will need to also change the filter in /root/Ansible/aws_ec2.yml so that it can find
-your EC2 instances
+### 2.2 Configure Ansible
+Edit `ansible.cfg` to point to your SSH private key:
 
-Now you are ready to simply go into the project root folder and run the Makefile by just running 'make'.
+```ini
+private_key_file = /path/to/key-name.pem
+```
 
-Afterwards you can verify that WordPress is running:
+---
+
+### 2.3 Configure AWS Credentials
+Navigate to `root/Terraform/resources.tf` and update:
+
+```hcl
+shared_credentials_files = ["/path/to/aws/credentials"]
+```
+
+Ensure Terraform and Ansible can access your AWS credentials.  
+
+---
+
+### 2.4 Update Resource Names
+- In the Terraform folder (`resources.tf`), update resource names as needed.  
+- Update the filter in `/root/Ansible/aws_ec2.yml` so Ansible can correctly identify your EC2 instances by name, role, and public IP.  
+
+---
+
+## 3. Deployment
+
+Navigate to the project root folder and run:
+
+```bash
+make
+```
+
+This will automatically execute the workflow:
+
+1. **Terraform** provisions the infrastructure.  
+2. **Ansible** configures the instances and deploys WordPress.  
+
+---
+
+## 4. Verification
+
+After deployment, verify WordPress is running:
+
+```bash
 curl -I http://<EC2_PUBLIC_IP>/wordpress/
+```
 
 Expected response:
+
+```
 HTTP/1.1 200 OK
+```
 
-Ansible also includes a post-deploy check task to automatically ensure the service is up.
+Ansible also includes a **post-deploy check task** to automatically ensure the service is up.  
 
-3. Integration between Ansible and Terraform
+---
 
-This project uses a two-step deployment workflow:
+## 5. Integration between Ansible and Terraform
 
-Terraform provisions the infrastructure:
-Sets up VPC, subnets, route table, internet gateway and route table associations
-Creates EC2 instances
-Sets up networking and security groups
+This project uses a **two-step deployment workflow**:
 
-Ansible configures the infrastructure:
-Installs required packages (Apache, PHP, etc.)
-Deploys WordPress
-Sets permissions and configurations
-Validates deployment
+### 5.1 Terraform
+- Provisions the infrastructure:
+  - VPC, subnets, route tables, internet gateway, and associations  
+  - EC2 instances  
+  - Networking and security groups  
 
-Ansible also uses a dynamic inventory by filtering through your EC2 instances by name and role and
-public ip address
+### 5.2 Ansible
+- Configures the infrastructure:
+  - Installs required packages (Apache, PHP, etc.)  
+  - Deploys WordPress  
+  - Sets permissions and configurations  
+  - Validates deployment  
 
-Afterwards it executes the respective roles on their respective EC2 instances. 
+Ansible uses a **dynamic inventory** by filtering your EC2 instances by name, role, and public IP, then executes the respective roles on their corresponding EC2 instances.
