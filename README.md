@@ -22,9 +22,7 @@ private_key_file = /route/key-name.pem
 
 You must also configure where your credentials file is for AWS to pick it up to use with Terraform and Ansible
 
-I recommend using an environment variable for it as such (run this before running the Makefile):
-
-export AWS_SHARED_CREDENTIALS_FILE=/route/aws/credentials
+Navigate to root/Terraform/resources.tf and change the shared_credentials_files entry to your file location.
 
 You should change the names of the resources in the Terraform folder (in resources.tf)
 Keep in mind you will need to also change the filter in /root/Ansible/aws_ec2.yml so that it can find
